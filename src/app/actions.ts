@@ -2,7 +2,6 @@
 
 import {
   generateCode,
-  GenerateCodeInput,
 } from '@/ai/flows/generate-code-from-prompt';
 import { improveCode, ImproveCodeInput } from '@/ai/flows/improve-code';
 import { explainCode, ExplainCodeInput } from '@/ai/flows/explain-code';
@@ -24,9 +23,6 @@ export async function generateCodeAction(
   const prompt = formData.get('prompt') as string;
   const language = formData.get('language') as string;
 
-  const languageFormatted =
-    language.charAt(0).toUpperCase() + language.slice(1);
-
   if (!prompt || !language) {
     return { error: 'Prompt and language are required.' };
   }
@@ -34,7 +30,7 @@ export async function generateCodeAction(
   try {
     const result = await generateCode({
       prompt,
-      language: languageFormatted as GenerateCodeInput['language'],
+      language: language,
     });
     return { code: result.code };
   } catch (error) {
@@ -56,9 +52,6 @@ export async function improveCodeAction(
   const prompt = formData.get('prompt') as string;
   const language = formData.get('language') as string;
 
-  const languageFormatted =
-    language.charAt(0).toUpperCase() + language.slice(1);
-
   if (!code || !prompt || !language) {
     return { error: 'Code, prompt, and language are required.' };
   }
@@ -67,7 +60,7 @@ export async function improveCodeAction(
     const result = await improveCode({
       code,
       prompt,
-      language: languageFormatted as ImproveCodeInput['language'],
+      language: language,
     });
     return { improvedCode: result.improvedCode };
   } catch (error) {
@@ -89,9 +82,6 @@ export async function explainCodeAction(
   const prompt = formData.get('prompt') as string;
   const language = formData.get('language') as string;
 
-  const languageFormatted =
-    language.charAt(0).toUpperCase() + language.slice(1);
-
   if (!code || !language) {
     return { error: 'Code and language are required.' };
   }
@@ -100,7 +90,7 @@ export async function explainCodeAction(
     const result = await explainCode({
       code,
       prompt: prompt || 'Explain this code snippet.',
-      language: languageFormatted as ExplainCodeInput['language'],
+      language: language,
     });
     return { explanation: result.explanation };
   } catch (error) {

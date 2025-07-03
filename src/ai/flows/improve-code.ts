@@ -14,7 +14,7 @@ import {z} from 'genkit';
 const ImproveCodeInputSchema = z.object({
   code: z.string().describe('The code snippet to improve.'),
   prompt: z.string().describe('The prompt for improving the code (e.g., improve efficiency, reduce cyclomatic complexity, or improve readability).'),
-  language: z.enum(['JavaScript', 'Python']).describe('The programming language of the code snippet.'),
+  language: z.string().describe('The programming language of the code snippet.'),
 });
 export type ImproveCodeInput = z.infer<typeof ImproveCodeInputSchema>;
 

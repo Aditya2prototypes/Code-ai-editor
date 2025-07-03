@@ -12,7 +12,7 @@ import {z} from 'genkit';
 
 const GenerateCodeInputSchema = z.object({
   prompt: z.string().describe('The prompt describing the code to generate.'),
-  language: z.enum(['JavaScript', 'Python']).describe('The programming language for the code snippet.'),
+  language: z.string().describe('The programming language for the code snippet.'),
 });
 export type GenerateCodeInput = z.infer<typeof GenerateCodeInputSchema>;
 

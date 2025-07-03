@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
 import { runPythonAction } from '@/app/actions';
+import { getLanguageFromFileName, getExtensionFromLanguage, getInitialCode } from '@/lib/language-utils';
 
 import { AiSidebar } from '@/components/ai-sidebar';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ import { cn } from '@/lib/utils';
 interface File {
   id: string;
   name: string;
-  language: 'javascript' | 'python';
+  language: string;
   code: string;
 }
 
@@ -114,10 +115,10 @@ export default function EditorPage() {
     if (codeParam) {
       try {
         const decodedCode = atob(codeParam.replace(/ /g, '+'));
-        const language = langParam === 'python' ? 'python' : 'javascript';
+        const language = getLanguageFromFileName(`file.${langParam || 'js'}`);
         const newFile: File = {
           id: Date.now().toString(),
-          name: `shared-code.${language === 'python' ? 'py' : 'js'}`,
+          name: `shared-code${getExtensionFromLanguage(language)}`,
           language,
           code: decodedCode,
         };
@@ -173,15 +174,13 @@ export default function EditorPage() {
     setFiles(files.map(f => f.id === activeFileId ? { ...f, code: newCode } : f));
   };
   
-  const handleLanguageChange = (newLang: 'javascript' | 'python') => {
+  const handleLanguageChange = (newLang: string) => {
     if (!activeFile) return;
     setFiles(files.map(f => {
         if (f.id === activeFileId) {
-            const newExtension = newLang === 'javascript' ? '.js' : '.py';
-            const oldExtensionRegex = /\.(js|py)$/;
-            const newName = f.name.match(oldExtensionRegex)
-                ? f.name.replace(oldExtensionRegex, newExtension) 
-                : `${f.name}${newExtension}`;
+            const newExtension = getExtensionFromLanguage(newLang);
+            const baseName = f.name.includes('.') ? f.name.substring(0, f.name.lastIndexOf('.')) : f.name;
+            const newName = `${baseName}${newExtension}`;
             return { ...f, language: newLang, name: newName };
         }
         return f;
@@ -189,16 +188,16 @@ export default function EditorPage() {
   };
   
   const handleAddFile = () => {
-    const name = prompt('Enter a file name (e.g., app.js):', `untitled-${files.length + 1}.js`);
+    const name = prompt('Enter a file name (e.g., app.js, style.css):', `untitled-${files.length + 1}.js`);
     if (!name) return;
   
-    const language = name.endsWith('.py') ? 'python' : 'javascript';
+    const language = getLanguageFromFileName(name);
   
     const newFile: File = {
       id: Date.now().toString(),
       name,
       language,
-      code: `// ${name}\n`,
+      code: getInitialCode(name, language),
     };
   
     setFiles([...files, newFile]);
