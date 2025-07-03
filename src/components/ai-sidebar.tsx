@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useEffect, useState, type ReactNode } from 'react';
+import { useFormStatus } from 'react-dom';
 import { generateCodeAction, improveCodeAction, explainCodeAction, generateComponentAction } from '@/app/actions';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -38,10 +38,10 @@ export function AiSidebar({
   language: string;
   onLanguageChange: (lang: string) => void;
 }) {
-  const [generateState, generateFormAction] = useFormState(generateCodeAction, initialGenerateState);
-  const [improveState, improveFormAction] = useFormState(improveCodeAction, initialImproveState);
-  const [explainState, explainFormAction] = useFormState(explainCodeAction, initialExplainState);
-  const [componentState, componentFormAction] = useFormState(generateComponentAction, initialComponentState);
+  const [generateState, generateFormAction] = useActionState(generateCodeAction, initialGenerateState);
+  const [improveState, improveFormAction] = useActionState(improveCodeAction, initialImproveState);
+  const [explainState, explainFormAction] = useActionState(explainCodeAction, initialExplainState);
+  const [componentState, componentFormAction] = useActionState(generateComponentAction, initialComponentState);
 
   const [prompt, setPrompt] = useState('');
   const { toast } = useToast();
