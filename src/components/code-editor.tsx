@@ -18,7 +18,7 @@ export function CodeEditor({ language, code, onCodeChange }: CodeEditorProps) {
         language={language.toLowerCase()}
         value={code}
         onChange={onCodeChange as OnChange}
-        theme="vs-light"
+        theme="vs-dark"
         options={{
           minimap: { enabled: false },
           fontSize: 14,

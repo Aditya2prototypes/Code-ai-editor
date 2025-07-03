@@ -31,17 +31,14 @@ const prompt = ai.definePrompt({
   name: 'explainCodePrompt',
   input: {schema: ExplainCodeInputSchema},
   output: {schema: ExplainCodeOutputSchema},
-  prompt: `You are an expert software developer. You are able to explain code snippets in a way that is easy to understand.
-
-  The user has provided the following code snippet:
-  ```{{{language}}}
-  {{{code}}}
-  ```
-
-  The user has the following question about the code:
-  {{{prompt}}}
-
-  Please provide a detailed explanation of the code snippet, answering the user's question.`, 
+  prompt: 'You are an expert software developer. You are able to explain code snippets in a way that is easy to understand.\n\n' +
+    '  The user has provided the following code snippet:\n' +
+    '  ```{{{language}}}\n' +
+    '  {{{code}}}\n' +
+    '  ```\n\n' +
+    '  The user has the following question about the code:\n' +
+    '  {{{prompt}}}\n\n' +
+    '  Please provide a detailed explanation of the code snippet, answering the user\'s question.',
 });
 
 const explainCodeFlow = ai.defineFlow(

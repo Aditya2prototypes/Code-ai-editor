@@ -15,11 +15,20 @@ import { CodeEditor } from '@/components/code-editor';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Play } from 'lucide-react';
 import { AiSidebar } from '@/components/ai-sidebar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const initialCode = `// Welcome to CodeMuse!
 // 1. Select a language on the left.
-// 2. Describe the code you want in the AI Assistant prompt.
-// 3. Click "Generate Code".
+// 2. Use the AI Assistant to generate, improve, or explain code.
+// 3. Click "Run Code" to execute JavaScript.
 // Your work is saved automatically to your browser.
 
 function greet(name) {
@@ -33,9 +42,52 @@ export default function Home() {
   const [code, setCode] = useLocalStorage<string>('codemuse-code', initialCode);
   const [language, setLanguage] = useLocalStorage<string>('codemuse-language', 'javascript');
   const [output, setOutput] = useState('');
+  const [explanation, setExplanation] = useState<string | null>(null);
 
   const handleRunCode = () => {
-    setOutput(`Executing ${language} code...\n\n> Mock output: Code execution is not implemented in this demo.\n`);
+    if (language !== 'javascript') {
+      setOutput(`> Execution for ${language} is not implemented in this demo.`);
+      return;
+    }
+
+    const logMessages: string[] = [];
+    const originalConsoleLog = console.log;
+    let finalOutput = '';
+
+    console.log = (...args) => {
+      const message = args.map(arg => {
+        if (arg === undefined) return 'undefined';
+        if (arg === null) return 'null';
+        try {
+          if (typeof arg === 'object' || Array.isArray(arg)) {
+            return JSON.stringify(arg, null, 2);
+          }
+          return arg.toString();
+        } catch {
+          return String(arg);
+        }
+      }).join(' ');
+      logMessages.push(message);
+    };
+
+    try {
+      // eslint-disable-next-line no-eval
+      eval(code);
+      if (logMessages.length > 0) {
+        finalOutput = logMessages.join('\n');
+      } else {
+        finalOutput = '> Code executed successfully. No output was logged to the console.';
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        finalOutput = `Error: ${error.message}`;
+      } else {
+        finalOutput = 'An unknown error occurred during execution.';
+      }
+    } finally {
+      console.log = originalConsoleLog;
+      setOutput(finalOutput);
+    }
   };
   
   const handleCodeChange = (newCode: string | undefined) => {
@@ -48,7 +100,13 @@ export default function Home() {
         <SidebarHeader>
           <CodeMuseLogo />
         </SidebarHeader>
-        <AiSidebar onCodeGenerated={setCode} language={language} onLanguageChange={setLanguage} />
+        <AiSidebar
+          code={code}
+          onCodeGenerated={setCode}
+          onExplanationGenerated={setExplanation}
+          language={language}
+          onLanguageChange={setLanguage}
+        />
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col h-screen bg-background p-2 sm:p-4 gap-4">
@@ -61,18 +119,18 @@ export default function Home() {
               Run Code
             </Button>
           </header>
-          <main className="flex flex-col gap-4 flex-grow min-h-0">
-            <div className="flex-grow min-h-0">
+          <main className="grid md:grid-cols-1 gap-4 flex-grow min-h-0 grid-rows-[minmax(0,5fr)_minmax(0,3fr)]">
+            <div className="min-h-0">
                <CodeEditor language={language} code={code} onCodeChange={handleCodeChange} />
             </div>
-            <div className="flex-grow min-h-0 flex flex-col max-h-[40vh] md:max-h-full">
+            <div className="min-h-0 flex flex-col">
               <Card className="h-full flex flex-col">
                 <CardHeader className="shrink-0">
                   <CardTitle>Console</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow min-h-0">
                   <pre className="text-sm font-code bg-muted p-4 rounded-md h-full overflow-auto whitespace-pre-wrap">
-                    {output || 'Click "Run Code" to see mock output here.'}
+                    {output || '> Click "Run Code" to see output here.'}
                   </pre>
                 </CardContent>
               </Card>
@@ -80,6 +138,21 @@ export default function Home() {
           </main>
         </div>
       </SidebarInset>
+      <AlertDialog open={!!explanation} onOpenChange={(open) => !open && setExplanation(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Code Explanation</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="whitespace-pre-wrap max-h-[60vh] overflow-y-auto pr-4">
+                {explanation}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setExplanation(null)}>Got it</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 }
