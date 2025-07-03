@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -171,12 +172,12 @@ export default function EditorPage() {
 
   const handleCodeChange = (newCode: string = '') => {
     if (!activeFile) return;
-    setFiles(files.map(f => f.id === activeFileId ? { ...f, code: newCode } : f));
+    setFiles(prevFiles => prevFiles.map(f => f.id === activeFileId ? { ...f, code: newCode } : f));
   };
   
   const handleLanguageChange = (newLang: string) => {
     if (!activeFile) return;
-    setFiles(files.map(f => {
+    setFiles(prevFiles => prevFiles.map(f => {
         if (f.id === activeFileId) {
             const newExtension = getExtensionFromLanguage(newLang);
             const baseName = f.name.includes('.') ? f.name.substring(0, f.name.lastIndexOf('.')) : f.name;
@@ -200,32 +201,36 @@ export default function EditorPage() {
       code: getInitialCode(name, language),
     };
   
-    setFiles([...files, newFile]);
+    setFiles(prevFiles => [...prevFiles, newFile]);
     setActiveFileId(newFile.id);
   };
 
   const handleCloseFile = (fileIdToClose: string) => {
-    const fileToCloseIndex = files.findIndex(f => f.id === fileIdToClose);
-    const newFiles = files.filter(f => f.id !== fileIdToClose);
+    setFiles(prevFiles => {
+      const fileToCloseIndex = prevFiles.findIndex(f => f.id === fileIdToClose);
+      if (fileToCloseIndex === -1) {
+        return prevFiles;
+      }
+      const newFiles = prevFiles.filter(f => f.id !== fileIdToClose);
 
-    if (newFiles.length === 0) {
-      const newDefaultFile = { ...defaultFile, id: Date.now().toString() };
-      setFiles([newDefaultFile]);
-      setActiveFileId(newDefaultFile.id);
-      return;
-    }
+      if (newFiles.length === 0) {
+        const newDefaultFile = { ...defaultFile, id: Date.now().toString() };
+        setActiveFileId(newDefaultFile.id);
+        return [newDefaultFile];
+      }
 
-    if (activeFileId === fileIdToClose) {
-      const newActiveIndex = Math.max(0, fileToCloseIndex - 1);
-      setActiveFileId(newFiles[newActiveIndex].id);
-    }
-    
-    setFiles(newFiles);
+      if (activeFileId === fileIdToClose) {
+        const newActiveIndex = Math.max(0, fileToCloseIndex - 1);
+        setActiveFileId(newFiles[newActiveIndex].id);
+      }
+      
+      return newFiles;
+    });
   };
   
   const handleCodeGenerated = (generatedCode: string) => {
     if (!activeFile) return;
-    setFiles(files.map(f => f.id === activeFileId ? { ...f, code: generatedCode } : f));
+    setFiles(prevFiles => prevFiles.map(f => f.id === activeFileId ? { ...f, code: generatedCode } : f));
   };
 
   return (
