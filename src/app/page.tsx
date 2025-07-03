@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CodeMuseLogo } from '@/components/codemuse-logo';
+import { TesDevLogo } from '@/components/codemuse-logo';
 import { CodeEditor } from '@/components/code-editor';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Play } from 'lucide-react';
@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const initialCode = `// Welcome to CodeMuse!
+const initialCode = `// Welcome to TesDev!
 // 1. Select a language on the left.
 // 2. Use the AI Assistant to generate, improve, or explain code.
 // 3. Click "Run Code" to execute JavaScript.
@@ -39,12 +39,13 @@ console.log(greet('Developer'));
 `;
 
 export default function Home() {
-  const [code, setCode] = useLocalStorage<string>('codemuse-code', initialCode);
-  const [language, setLanguage] = useLocalStorage<string>('codemuse-language', 'javascript');
+  const [code, setCode] = useLocalStorage<string>('tesdev-code', initialCode);
+  const [language, setLanguage] = useLocalStorage<string>('tesdev-language', 'javascript');
   const [output, setOutput] = useState('');
   const [explanation, setExplanation] = useState<string | null>(null);
 
   const handleRunCode = () => {
+    setOutput('');
     if (language !== 'javascript') {
       setOutput(`> Execution for ${language} is not implemented in this demo.`);
       return;
@@ -52,24 +53,32 @@ export default function Home() {
 
     const logMessages: string[] = [];
     const originalConsoleLog = console.log;
+    const originalConsoleError = console.error;
+
+    const formatArg = (arg: any): string => {
+      if (arg === undefined) return 'undefined';
+      if (arg === null) return 'null';
+      try {
+        if (typeof arg === 'object' || Array.isArray(arg)) {
+          return JSON.stringify(arg, null, 2);
+        }
+        return arg.toString();
+      } catch {
+        return String(arg);
+      }
+    };
 
     console.log = (...args) => {
-      const message = args
-        .map((arg) => {
-          if (arg === undefined) return 'undefined';
-          if (arg === null) return 'null';
-          try {
-            if (typeof arg === 'object' || Array.isArray(arg)) {
-              return JSON.stringify(arg, null, 2);
-            }
-            return arg.toString();
-          } catch {
-            return String(arg);
-          }
-        })
-        .join(' ');
+      originalConsoleLog(...args); // Keep logging to the actual console
+      const message = args.map(formatArg).join(' ');
       logMessages.push(message);
     };
+
+    console.error = (...args) => {
+        originalConsoleError(...args);
+        const message = args.map(formatArg).join(' ');
+        logMessages.push(`Error: ${message}`);
+    }
 
     try {
       // eslint-disable-next-line no-eval
@@ -89,6 +98,7 @@ export default function Home() {
       }
     } finally {
       console.log = originalConsoleLog;
+      console.error = originalConsoleError;
     }
   };
 
@@ -100,7 +110,7 @@ export default function Home() {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <CodeMuseLogo />
+          <TesDevLogo />
         </SidebarHeader>
         <AiSidebar
           code={code}
