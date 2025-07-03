@@ -52,21 +52,22 @@ export default function Home() {
 
     const logMessages: string[] = [];
     const originalConsoleLog = console.log;
-    let finalOutput = '';
 
     console.log = (...args) => {
-      const message = args.map(arg => {
-        if (arg === undefined) return 'undefined';
-        if (arg === null) return 'null';
-        try {
-          if (typeof arg === 'object' || Array.isArray(arg)) {
-            return JSON.stringify(arg, null, 2);
+      const message = args
+        .map((arg) => {
+          if (arg === undefined) return 'undefined';
+          if (arg === null) return 'null';
+          try {
+            if (typeof arg === 'object' || Array.isArray(arg)) {
+              return JSON.stringify(arg, null, 2);
+            }
+            return arg.toString();
+          } catch {
+            return String(arg);
           }
-          return arg.toString();
-        } catch {
-          return String(arg);
-        }
-      }).join(' ');
+        })
+        .join(' ');
       logMessages.push(message);
     };
 
@@ -74,22 +75,23 @@ export default function Home() {
       // eslint-disable-next-line no-eval
       eval(code);
       if (logMessages.length > 0) {
-        finalOutput = logMessages.join('\n');
+        setOutput(logMessages.join('\n'));
       } else {
-        finalOutput = '> Code executed successfully. No output was logged to the console.';
+        setOutput(
+          '> Code executed successfully. No output was logged to the console.'
+        );
       }
     } catch (error) {
       if (error instanceof Error) {
-        finalOutput = `Error: ${error.message}`;
+        setOutput(`Error: ${error.message}`);
       } else {
-        finalOutput = 'An unknown error occurred during execution.';
+        setOutput('An unknown error occurred during execution.');
       }
     } finally {
       console.log = originalConsoleLog;
-      setOutput(finalOutput);
     }
   };
-  
+
   const handleCodeChange = (newCode: string | undefined) => {
     setCode(newCode || '');
   };
@@ -111,7 +113,7 @@ export default function Home() {
       <SidebarInset>
         <div className="flex flex-col h-screen bg-background p-2 sm:p-4 gap-4">
           <header className="flex items-center justify-between shrink-0 h-12 px-2">
-            <SidebarTrigger className="md:hidden"/>
+            <SidebarTrigger className="md:hidden" />
             <div className="hidden md:block w-7 h-7"></div>
             <h2 className="font-headline text-lg font-semibold">Editor</h2>
             <Button onClick={handleRunCode}>
@@ -121,7 +123,11 @@ export default function Home() {
           </header>
           <main className="grid md:grid-cols-1 gap-4 flex-grow min-h-0 grid-rows-[minmax(0,5fr)_minmax(0,3fr)]">
             <div className="min-h-0">
-               <CodeEditor language={language} code={code} onCodeChange={handleCodeChange} />
+              <CodeEditor
+                language={language}
+                code={code}
+                onCodeChange={handleCodeChange}
+              />
             </div>
             <div className="min-h-0 flex flex-col">
               <Card className="h-full flex flex-col">
@@ -138,7 +144,10 @@ export default function Home() {
           </main>
         </div>
       </SidebarInset>
-      <AlertDialog open={!!explanation} onOpenChange={(open) => !open && setExplanation(null)}>
+      <AlertDialog
+        open={!!explanation}
+        onOpenChange={(open) => !open && setExplanation(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Code Explanation</AlertDialogTitle>
@@ -149,7 +158,9 @@ export default function Home() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setExplanation(null)}>Got it</AlertDialogAction>
+            <AlertDialogAction onClick={() => setExplanation(null)}>
+              Got it
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
