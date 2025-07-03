@@ -209,18 +209,16 @@ export default function EditorPage() {
   };
   
   const handleLanguageChange = useCallback((newLang: string) => {
-    if (!activeFile) return;
     setFiles(prevFiles => prevFiles.map(f => {
-        if (f.id === activeFileId) {
-            const newExtension = getExtensionFromLanguage(newLang);
-            const baseName = f.name.includes('.') ? f.name.substring(0, f.name.lastIndexOf('.')) : f.name;
-            const newName = `${baseName}${newExtension}`;
-            return { ...f, language: newLang, name: newName, code: getInitialCode(newName, newLang) };
-        }
-        return f;
+      if (f.id === activeFileId) {
+        const newExtension = getExtensionFromLanguage(newLang);
+        const baseName = f.name.includes('.') ? f.name.substring(0, f.name.lastIndexOf('.')) : f.name;
+        const newName = `${baseName}${newExtension}`;
+        return { ...f, language: newLang, name: newName, code: getInitialCode(newName, newLang) };
+      }
+      return f;
     }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeFile, setFiles]);
+  }, [activeFileId, setFiles]);
   
   const handleAddFile = () => {
     const name = prompt('Enter a file name (e.g., app.js, style.css):', `untitled-${files.length + 1}.js`);
