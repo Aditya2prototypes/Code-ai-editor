@@ -1,11 +1,12 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useToast } from '@/hooks/use-toast';
 import { runPythonAction } from '@/app/actions';
 import { getLanguageFromFileName, getExtensionFromLanguage, getInitialCode } from '@/lib/language-utils';
+import Link from 'next/link';
 
 import { AiSidebar } from '@/components/ai-sidebar';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ import {
   X,
   Code2,
   Plus,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -69,19 +71,34 @@ const ActivityBar = ({
     setActivePanel(activePanel === panel ? null : panel);
   };
 
-  const iconStyle = (panel: 'ai') =>
+  const iconStyle = (isActive: boolean) =>
     cn(
       'h-10 w-full flex items-center justify-center cursor-pointer border-l-2',
-      activePanel === panel
+      isActive
         ? 'border-blue-400 text-neutral-100'
         : 'border-transparent text-neutral-400 hover:text-neutral-100'
     );
 
   return (
-    <div className="flex w-12 flex-col items-center gap-2 border-r border-neutral-700 bg-[#333333] py-4">
-      <button onClick={() => togglePanel('ai')} className={iconStyle('ai')}>
-        <Bot className="h-6 w-6" />
-      </button>
+    <div className="flex w-12 flex-col items-center justify-between border-r border-neutral-700 bg-[#333333] py-4">
+      <div className="flex w-full flex-col items-center gap-2">
+        <button
+          onClick={() => togglePanel('ai')}
+          className={iconStyle(activePanel === 'ai')}
+          title="AI Assistant"
+        >
+          <Bot className="h-6 w-6" />
+        </button>
+      </div>
+      <div className="flex w-full flex-col items-center gap-2">
+        <Link
+          href="/documentation"
+          className={iconStyle(false)}
+          title="Documentation"
+        >
+          <BookOpen className="h-6 w-6" />
+        </Link>
+      </div>
     </div>
   );
 };
@@ -103,8 +120,13 @@ export default function EditorPage() {
   useEffect(() => {
     if (!activeFile && files.length > 0) {
       setActiveFileId(files[0].id);
+    } else if (files.length === 0) {
+       // If all files are closed, create a new default file
+      const newDefaultFile = { ...defaultFile, id: Date.now().toString() };
+      setFiles([newDefaultFile]);
+      setActiveFileId(newDefaultFile.id);
     }
-  }, [activeFile, files]);
+  }, [activeFile, files, setFiles]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -142,7 +164,14 @@ export default function EditorPage() {
     if (activeFile.language === 'javascript') {
       const logMessages: string[] = [];
       const originalConsoleLog = console.log;
-      console.log = (...args: any[]) => logMessages.push(args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' '));
+      console.log = (...args: any[]) => {
+        logMessages.push(
+          args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ')
+        );
+      };
+      
       try {
         new Function(activeFile.code)();
         setOutput(logMessages.join('\n') || '> Code executed successfully. No output logged.');
@@ -150,12 +179,16 @@ export default function EditorPage() {
         setOutput(`Error: ${error.message}`);
       } finally {
         console.log = originalConsoleLog;
+        setIsRunning(false);
       }
     } else if (activeFile.language === 'python') {
       const result = await runPythonAction(activeFile.code);
       setOutput(result.error ? `Error: ${result.error}` : result.output || '> No output from script.');
+      setIsRunning(false);
+    } else {
+      setOutput(`> Running for language "${activeFile.language}" is not supported yet.`);
+      setIsRunning(false);
     }
-    setIsRunning(false);
   };
 
   const handleShare = () => {
@@ -175,18 +208,19 @@ export default function EditorPage() {
     setFiles(prevFiles => prevFiles.map(f => f.id === activeFileId ? { ...f, code: newCode } : f));
   };
   
-  const handleLanguageChange = (newLang: string) => {
+  const handleLanguageChange = useCallback((newLang: string) => {
     if (!activeFile) return;
     setFiles(prevFiles => prevFiles.map(f => {
         if (f.id === activeFileId) {
             const newExtension = getExtensionFromLanguage(newLang);
             const baseName = f.name.includes('.') ? f.name.substring(0, f.name.lastIndexOf('.')) : f.name;
             const newName = `${baseName}${newExtension}`;
-            return { ...f, language: newLang, name: newName };
+            return { ...f, language: newLang, name: newName, code: getInitialCode(newName, newLang) };
         }
         return f;
     }));
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeFile, setFiles]);
   
   const handleAddFile = () => {
     const name = prompt('Enter a file name (e.g., app.js, style.css):', `untitled-${files.length + 1}.js`);
@@ -213,15 +247,13 @@ export default function EditorPage() {
       }
       const newFiles = prevFiles.filter(f => f.id !== fileIdToClose);
 
-      if (newFiles.length === 0) {
-        const newDefaultFile = { ...defaultFile, id: Date.now().toString() };
-        setActiveFileId(newDefaultFile.id);
-        return [newDefaultFile];
-      }
-
       if (activeFileId === fileIdToClose) {
-        const newActiveIndex = Math.max(0, fileToCloseIndex - 1);
-        setActiveFileId(newFiles[newActiveIndex].id);
+         if (newFiles.length > 0) {
+            const newActiveIndex = Math.max(0, fileToCloseIndex - 1);
+            setActiveFileId(newFiles[newActiveIndex].id);
+         } else {
+            setActiveFileId('');
+         }
       }
       
       return newFiles;
