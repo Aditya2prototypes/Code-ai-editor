@@ -203,10 +203,10 @@ export default function EditorPage() {
     }
   };
 
-  const handleCodeChange = (newCode: string = '') => {
-    if (!activeFile) return;
+  const handleCodeChange = useCallback((newCode: string = '') => {
+    if (!activeFileId) return;
     setFiles(prevFiles => prevFiles.map(f => f.id === activeFileId ? { ...f, code: newCode } : f));
-  };
+  }, [activeFileId, setFiles]);
   
   const handleLanguageChange = useCallback((newLang: string) => {
     setFiles(prevFiles => prevFiles.map(f => {
@@ -220,7 +220,7 @@ export default function EditorPage() {
     }));
   }, [activeFileId, setFiles]);
   
-  const handleAddFile = () => {
+  const handleAddFile = useCallback(() => {
     const name = prompt('Enter a file name (e.g., app.js, style.css):', `untitled-${files.length + 1}.js`);
     if (!name) return;
   
@@ -235,9 +235,9 @@ export default function EditorPage() {
   
     setFiles(prevFiles => [...prevFiles, newFile]);
     setActiveFileId(newFile.id);
-  };
+  }, [files, setFiles]);
 
-  const handleCloseFile = (fileIdToClose: string) => {
+  const handleCloseFile = useCallback((fileIdToClose: string) => {
     setFiles(prevFiles => {
       const fileToCloseIndex = prevFiles.findIndex(f => f.id === fileIdToClose);
       if (fileToCloseIndex === -1) {
@@ -256,12 +256,12 @@ export default function EditorPage() {
       
       return newFiles;
     });
-  };
+  }, [activeFileId, setFiles]);
   
-  const handleCodeGenerated = (generatedCode: string) => {
-    if (!activeFile) return;
+  const handleCodeGenerated = useCallback((generatedCode: string) => {
+    if (!activeFileId) return;
     setFiles(prevFiles => prevFiles.map(f => f.id === activeFileId ? { ...f, code: generatedCode } : f));
-  };
+  }, [activeFileId, setFiles]);
 
   return (
     <div className="flex h-screen bg-[#1e1e1e] font-sans text-sm text-neutral-300">
