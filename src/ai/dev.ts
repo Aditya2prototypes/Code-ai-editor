@@ -4,3 +4,5 @@ config();
 import '@/ai/flows/improve-code.ts';
 import '@/ai/flows/generate-code-from-prompt.ts';
 import '@/ai/flows/explain-code.ts';
+import '@/ai/flows/run-python-code.ts';
+import '@/ai/flows/generate-tailwind-component.ts';

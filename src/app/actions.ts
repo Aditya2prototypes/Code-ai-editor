@@ -6,6 +6,11 @@ import {
 } from '@/ai/flows/generate-code-from-prompt';
 import { improveCode, ImproveCodeInput } from '@/ai/flows/improve-code';
 import { explainCode, ExplainCodeInput } from '@/ai/flows/explain-code';
+import { runPythonCode } from '@/ai/flows/run-python-code';
+import {
+  generateTailwindComponent,
+} from '@/ai/flows/generate-tailwind-component';
+
 
 interface GenerateCodeActionResult {
   code?: string;
@@ -101,5 +106,43 @@ export async function explainCodeAction(
   } catch (error) {
     console.error(error);
     return { error: 'Failed to explain code. Please try again.' };
+  }
+}
+
+export async function runPythonAction(code: string): Promise<{ output?: string; error?: string; }> {
+  if (!code) {
+    return { error: 'No Python code provided.' };
+  }
+  try {
+    const result = await runPythonCode({ code });
+    return { output: result.output };
+  } catch (error) {
+    console.error(error);
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+    return { error: `Failed to run Python code: ${errorMessage}` };
+  }
+}
+
+interface GenerateComponentActionResult {
+  code?: string;
+  error?: string;
+}
+
+export async function generateComponentAction(
+  prevState: GenerateComponentActionResult,
+  formData: FormData
+): Promise<GenerateComponentActionResult> {
+  const prompt = formData.get('prompt') as string;
+
+  if (!prompt) {
+    return { error: 'Prompt is required.' };
+  }
+
+  try {
+    const result = await generateTailwindComponent({ prompt });
+    return { code: result.code };
+  } catch (error) {
+    console.error(error);
+    return { error: 'Failed to generate component. Please try again.' };
   }
 }

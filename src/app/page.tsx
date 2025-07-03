@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TesDevLogo } from '@/components/codemuse-logo';
 import { CodeEditor } from '@/components/code-editor';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { Play } from 'lucide-react';
+import { Play, Share2, LoaderCircle } from 'lucide-react';
 import { AiSidebar } from '@/components/ai-sidebar';
 import {
   AlertDialog,
@@ -24,11 +24,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { runPythonAction } from '@/app/actions';
+import { useToast } from '@/hooks/use-toast';
 
 const initialCode = `// Welcome to TesDev!
 // 1. Select a language on the left.
 // 2. Use the AI Assistant to generate, improve, or explain code.
-// 3. Click "Run Code" to execute JavaScript.
+// 3. Click "Run Code" to execute JavaScript or Python.
 // Your work is saved automatically to your browser.
 
 function greet(name) {
@@ -40,65 +42,130 @@ console.log(greet('Developer'));
 
 export default function Home() {
   const [code, setCode] = useLocalStorage<string>('tesdev-code', initialCode);
-  const [language, setLanguage] = useLocalStorage<string>('tesdev-language', 'javascript');
+  const [language, setLanguage] = useLocalStorage<string>(
+    'tesdev-language',
+    'javascript'
+  );
   const [output, setOutput] = useState('');
   const [explanation, setExplanation] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const { toast } = useToast();
 
-  const handleRunCode = () => {
-    setOutput('');
-    if (language !== 'javascript') {
-      setOutput(`> Execution for ${language} is not implemented in this demo.`);
-      return;
-    }
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const searchParams = new URLSearchParams(window.location.search);
+    const codeParam = searchParams.get('code');
+    const langParam = searchParams.get('lang');
 
-    const logMessages: string[] = [];
-    const originalConsoleLog = console.log;
-    const originalConsoleError = console.error;
-
-    const formatArg = (arg: any): string => {
-      if (arg === undefined) return 'undefined';
-      if (arg === null) return 'null';
+    if (codeParam) {
       try {
-        if (typeof arg === 'object' || Array.isArray(arg)) {
-          return JSON.stringify(arg, null, 2);
-        }
-        return arg.toString();
-      } catch {
-        return String(arg);
+        const decodedCode = atob(codeParam.replace(/ /g, '+'));
+        setCode(decodedCode);
+      } catch (e) {
+        console.error('Failed to decode code from URL', e);
+        toast({
+          variant: 'destructive',
+          title: 'Error loading shared code',
+          description: 'The shared link appears to be invalid.',
+        });
       }
-    };
+    }
+    if (langParam) {
+      setLanguage(langParam);
+    }
+    
+    if (codeParam || langParam) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    console.log = (...args) => {
-      originalConsoleLog(...args); // Keep logging to the actual console
-      const message = args.map(formatArg).join(' ');
-      logMessages.push(message);
-    };
+  const handleRunCode = async () => {
+    setOutput('');
+    setIsRunning(true);
 
-    console.error = (...args) => {
+    if (language === 'javascript') {
+      const logMessages: string[] = [];
+      const originalConsoleLog = console.log;
+      const originalConsoleError = console.error;
+
+      const formatArg = (arg: any): string => {
+        if (arg === undefined) return 'undefined';
+        if (arg === null) return 'null';
+        try {
+          if (typeof arg === 'object' || Array.isArray(arg)) {
+            return JSON.stringify(arg, null, 2);
+          }
+          return arg.toString();
+        } catch {
+          return String(arg);
+        }
+      };
+
+      console.log = (...args) => {
+        originalConsoleLog(...args); // Keep logging to the actual console
+        const message = args.map(formatArg).join(' ');
+        logMessages.push(message);
+      };
+
+      console.error = (...args) => {
         originalConsoleError(...args);
         const message = args.map(formatArg).join(' ');
         logMessages.push(`Error: ${message}`);
+      };
+
+      try {
+        // eslint-disable-next-line no-eval
+        eval(code);
+        if (logMessages.length > 0) {
+          setOutput(logMessages.join('\n'));
+        } else {
+          setOutput(
+            '> Code executed successfully. No output was logged to the console.'
+          );
+        }
+      } catch (error) {
+        if (error instanceof Error) {
+          setOutput(`Error: ${error.message}`);
+        } else {
+          setOutput('An unknown error occurred during execution.');
+        }
+      } finally {
+        console.log = originalConsoleLog;
+        console.error = originalConsoleError;
+      }
+    } else if (language === 'python') {
+      const result = await runPythonAction(code);
+      if (result.error) {
+        setOutput(`Error: ${result.error}`);
+      } else {
+        setOutput(result.output || '> No output from script.');
+      }
+    } else {
+      setOutput(`> Execution for ${language} is not implemented in this demo.`);
     }
 
+    setIsRunning(false);
+  };
+
+  const handleShare = () => {
+    if (typeof window === 'undefined') return;
     try {
-      // eslint-disable-next-line no-eval
-      eval(code);
-      if (logMessages.length > 0) {
-        setOutput(logMessages.join('\n'));
-      } else {
-        setOutput(
-          '> Code executed successfully. No output was logged to the console.'
-        );
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        setOutput(`Error: ${error.message}`);
-      } else {
-        setOutput('An unknown error occurred during execution.');
-      }
-    } finally {
-      console.log = originalConsoleLog;
-      console.error = originalConsoleError;
+      const encodedCode = btoa(code);
+      const url = `${window.location.origin}${window.location.pathname}?code=${encodedCode}&lang=${language}`;
+      navigator.clipboard.writeText(url);
+      toast({
+        title: 'Link Copied!',
+        description: 'A shareable link has been copied to your clipboard.',
+      });
+    } catch (e) {
+      console.error('Failed to create share link', e);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not create a shareable link.',
+      });
     }
   };
 
@@ -126,10 +193,20 @@ export default function Home() {
             <SidebarTrigger className="md:hidden" />
             <div className="hidden md:block w-7 h-7"></div>
             <h2 className="font-headline text-lg font-semibold">Editor</h2>
-            <Button onClick={handleRunCode}>
-              <Play className="mr-2 h-4 w-4" />
-              Run Code
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={handleShare} variant="outline">
+                <Share2 className="mr-2 h-4 w-4" />
+                Share
+              </Button>
+              <Button onClick={handleRunCode} disabled={isRunning}>
+                {isRunning ? (
+                  <LoaderCircle className="animate-spin mr-2 h-4 w-4" />
+                ) : (
+                  <Play className="mr-2 h-4 w-4" />
+                )}
+                Run Code
+              </Button>
+            </div>
           </header>
           <main className="grid md:grid-cols-1 gap-4 flex-grow min-h-0 grid-rows-[minmax(0,5fr)_minmax(0,3fr)]">
             <div className="min-h-0">
