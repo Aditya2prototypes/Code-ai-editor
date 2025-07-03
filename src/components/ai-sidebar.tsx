@@ -6,7 +6,6 @@ import { generateCodeAction, improveCodeAction, explainCodeAction, generateCompo
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { SidebarContent as SidebarContentWrapper, SidebarGroup, SidebarGroupLabel } from './ui/sidebar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BotMessageSquare, Languages, LayoutTemplate, LoaderCircle, Sparkles, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -89,24 +88,25 @@ export function AiSidebar({
 
 
   return (
-    <SidebarContentWrapper className="flex flex-col p-0">
-      <Tabs defaultValue="generate" className="flex flex-col flex-grow">
-        <div className="p-2">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="generate"><Sparkles className="mr-1 h-4 w-4" />Generate</TabsTrigger>
-            <TabsTrigger value="improve"><BotMessageSquare className="mr-1 h-4 w-4" />Improve</TabsTrigger>
-            <TabsTrigger value="explain"><Lightbulb className="mr-1 h-4 w-4" />Explain</TabsTrigger>
-            <TabsTrigger value="component"><LayoutTemplate className="mr-1 h-4 w-4" />Component</TabsTrigger>
+    <div className="flex h-full flex-col">
+      <h2 className="px-4 pt-4 pb-2 text-xs font-bold uppercase text-neutral-400">AI Assistant</h2>
+      <Tabs defaultValue="generate" className="flex flex-grow flex-col">
+        <div className="px-2">
+          <TabsList className="grid w-full grid-cols-4 bg-muted">
+            <TabsTrigger value="generate"><Sparkles className="h-4 w-4" /></TabsTrigger>
+            <TabsTrigger value="improve"><BotMessageSquare className="h-4 w-4" /></TabsTrigger>
+            <TabsTrigger value="explain"><Lightbulb className="h-4 w-4" /></TabsTrigger>
+            <TabsTrigger value="component"><LayoutTemplate className="h-4 w-4" /></TabsTrigger>
           </TabsList>
         </div>
         
-        <div className="flex-grow flex flex-col min-h-0">
+        <div className="flex-grow flex flex-col min-h-0 p-2">
           <TabsContent value="generate" className="flex-grow flex flex-col m-0">
-            <form action={generateFormAction} className="flex flex-col gap-4 flex-grow p-0">
-              <SidebarGroup>
-                <SidebarGroupLabel className="flex items-center gap-2 text-sm">
+            <form action={generateFormAction} className="flex flex-col gap-4 flex-grow">
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium mb-2">
                   <Languages /> Language
-                </SidebarGroupLabel>
+                </label>
                 <Select name="language" value={language} onValueChange={onLanguageChange} required>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -114,49 +114,49 @@ export function AiSidebar({
                     <SelectItem value="python">Python</SelectItem>
                   </SelectContent>
                 </Select>
-              </SidebarGroup>
-              <SidebarGroup className="flex-grow flex flex-col">
-                <Textarea name="prompt" placeholder="e.g., create a function that returns the fibonacci sequence" className="flex-grow min-h-[150px] font-body" value={prompt} onChange={(e) => setPrompt(e.target.value)} required />
-              </SidebarGroup>
-              <div className="mt-auto p-2"><SubmitButton>Generate Code</SubmitButton></div>
+              </div>
+              <div className="flex-grow flex flex-col">
+                <Textarea name="prompt" placeholder="e.g., create a function that returns the fibonacci sequence" className="flex-grow min-h-[150px] font-body bg-input" value={prompt} onChange={(e) => setPrompt(e.target.value)} required />
+              </div>
+              <div className="mt-auto"><SubmitButton>Generate Code</SubmitButton></div>
             </form>
           </TabsContent>
 
           <TabsContent value="improve" className="flex-grow flex flex-col m-0">
-             <form action={improveFormAction} className="flex flex-col gap-4 flex-grow p-0">
+             <form action={improveFormAction} className="flex flex-col gap-4 flex-grow">
                 <input type="hidden" name="code" value={code} />
                 <input type="hidden" name="language" value={language} />
-                <SidebarGroup className="flex-grow flex flex-col">
-                    <SidebarGroupLabel className="flex items-center gap-2 text-sm">Improvement Instructions</SidebarGroupLabel>
-                    <Textarea name="prompt" placeholder="e.g., improve efficiency, add comments, or convert to an arrow function" className="flex-grow min-h-[150px] font-body" value={prompt} onChange={(e) => setPrompt(e.target.value)} required />
-                </SidebarGroup>
-                <div className="mt-auto p-2"><SubmitButton>Improve Code</SubmitButton></div>
+                <div className="flex-grow flex flex-col">
+                    <label className="flex items-center gap-2 text-sm font-medium mb-2">Improvement Instructions</label>
+                    <Textarea name="prompt" placeholder="e.g., improve efficiency, add comments, or convert to an arrow function" className="flex-grow min-h-[150px] font-body bg-input" value={prompt} onChange={(e) => setPrompt(e.target.value)} required />
+                </div>
+                <div className="mt-auto"><SubmitButton>Improve Code</SubmitButton></div>
              </form>
           </TabsContent>
 
           <TabsContent value="explain" className="flex-grow flex flex-col m-0">
-            <form action={explainFormAction} className="flex flex-col gap-4 flex-grow p-0">
+            <form action={explainFormAction} className="flex flex-col gap-4 flex-grow">
               <input type="hidden" name="code" value={code} />
               <input type="hidden" name="language" value={language} />
-              <SidebarGroup className="flex-grow flex flex-col">
-                <SidebarGroupLabel className="flex items-center gap-2 text-sm">What do you want to know?</SidebarGroupLabel>
-                <Textarea name="prompt" placeholder="e.g., What is the time complexity? (Leave blank for a general explanation)" className="flex-grow min-h-[150px] font-body" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
-              </SidebarGroup>
-              <div className="mt-auto p-2"><SubmitButton>Explain Code</SubmitButton></div>
+              <div className="flex-grow flex flex-col">
+                <label className="flex items-center gap-2 text-sm font-medium mb-2">What do you want to know?</label>
+                <Textarea name="prompt" placeholder="e.g., What is the time complexity? (Leave blank for a general explanation)" className="flex-grow min-h-[150px] font-body bg-input" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
+              </div>
+              <div className="mt-auto"><SubmitButton>Explain Code</SubmitButton></div>
             </form>
           </TabsContent>
 
           <TabsContent value="component" className="flex-grow flex flex-col m-0">
-            <form action={componentFormAction} className="flex flex-col gap-4 flex-grow p-0">
-              <SidebarGroup className="flex-grow flex flex-col">
-                  <SidebarGroupLabel className="flex items-center gap-2 text-sm">Component Description</SidebarGroupLabel>
-                  <Textarea name="prompt" placeholder="e.g., a login form with email, password, and a submit button" className="flex-grow min-h-[150px] font-body" value={prompt} onChange={(e) => setPrompt(e.target.value)} required />
-              </SidebarGroup>
-              <div className="mt-auto p-2"><SubmitButton>Generate Component</SubmitButton></div>
+            <form action={componentFormAction} className="flex flex-col gap-4 flex-grow">
+              <div className="flex-grow flex flex-col">
+                  <label className="flex items-center gap-2 text-sm font-medium mb-2">Component Description</label>
+                  <Textarea name="prompt" placeholder="e.g., a login form with email, password, and a submit button" className="flex-grow min-h-[150px] font-body bg-input" value={prompt} onChange={(e) => setPrompt(e.target.value)} required />
+              </div>
+              <div className="mt-auto"><SubmitButton>Generate Component</SubmitButton></div>
             </form>
           </TabsContent>
         </div>
       </Tabs>
-    </SidebarContentWrapper>
+    </div>
   );
 }

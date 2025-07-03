@@ -12,7 +12,7 @@ interface CodeEditorProps {
 
 export function CodeEditor({ language, code, onCodeChange }: CodeEditorProps) {
   return (
-    <div className="relative h-full w-full rounded-lg border bg-card font-code shadow-sm overflow-hidden">
+    <div className="relative h-full w-full font-code overflow-hidden">
       <Editor
         height="100%"
         language={language.toLowerCase()}
@@ -28,6 +28,7 @@ export function CodeEditor({ language, code, onCodeChange }: CodeEditorProps) {
           automaticLayout: true,
           tabSize: 2,
           insertSpaces: true,
+          padding: { top: 16 },
         }}
         loading={<Skeleton className="h-full w-full" />}
       />
