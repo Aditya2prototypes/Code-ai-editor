@@ -118,15 +118,13 @@ export default function EditorPage() {
   const activeFile = files.find(f => f.id === activeFileId) || files[0] || null;
 
   useEffect(() => {
-    if (!activeFile && files.length > 0) {
+    // On initial load, if there's no active file ID set, but there are files,
+    // set the first file to be active.
+    if (files.length > 0 && !files.some(f => f.id === activeFileId)) {
       setActiveFileId(files[0].id);
-    } else if (files.length === 0) {
-       // If all files are closed, create a new default file
-      const newDefaultFile = { ...defaultFile, id: Date.now().toString() };
-      setFiles([newDefaultFile]);
-      setActiveFileId(newDefaultFile.id);
     }
-  }, [activeFile, files, setFiles]);
+  }, [files, activeFileId]);
+
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -235,23 +233,24 @@ export default function EditorPage() {
   
     setFiles(prevFiles => [...prevFiles, newFile]);
     setActiveFileId(newFile.id);
-  }, [files, setFiles]);
+  }, [files.length, setFiles]);
 
   const handleCloseFile = useCallback((fileIdToClose: string) => {
     setFiles(prevFiles => {
       const fileToCloseIndex = prevFiles.findIndex(f => f.id === fileIdToClose);
-      if (fileToCloseIndex === -1) {
-        return prevFiles;
-      }
       const newFiles = prevFiles.filter(f => f.id !== fileIdToClose);
 
+      if (newFiles.length === 0) {
+        // Last file was closed, create a new default one
+        const newDefaultFile = { ...defaultFile, id: Date.now().toString() };
+        setActiveFileId(newDefaultFile.id);
+        return [newDefaultFile];
+      }
+
       if (activeFileId === fileIdToClose) {
-         if (newFiles.length > 0) {
-            const newActiveIndex = Math.max(0, fileToCloseIndex - 1);
-            setActiveFileId(newFiles[newActiveIndex].id);
-         } else {
-            setActiveFileId('');
-         }
+        // The active file was closed, select a new one
+        const newActiveIndex = Math.max(0, fileToCloseIndex - 1);
+        setActiveFileId(newFiles[newActiveIndex].id);
       }
       
       return newFiles;
