@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { TesDevLogo } from '@/components/codemuse-logo';
+import { MicoDevLogo } from '@/components/codemuse-logo';
 
 export default function HomePage() {
   return (
@@ -14,7 +14,7 @@ export default function HomePage() {
       <div className="absolute -bottom-8 left-1/4 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob [animation-delay:4s]"></div>
 
       <header className="absolute top-0 left-0 w-full p-4 flex justify-between items-center sm:p-6 z-10">
-        <TesDevLogo />
+        <MicoDevLogo />
       </header>
       
       <main className="text-center flex flex-col items-center z-10">
@@ -22,7 +22,7 @@ export default function HomePage() {
           Your AI Coding Companion
         </h1>
         <p className="mt-6 max-w-xl md:max-w-2xl mx-auto text-lg sm:text-xl text-muted-foreground">
-          Write, understand, and debug code faster than ever. TesDev generates functional code snippets, explains logic, and refactors messy code with the power of AI.
+          Write, understand, and debug code faster than ever. Mico Dev generates functional code snippets, explains logic, and refactors messy code with the power of AI.
         </p>
         
         <div className="mt-12">
@@ -36,7 +36,7 @@ export default function HomePage() {
       </main>
 
       <footer className="absolute bottom-4 text-xs sm:text-sm text-muted-foreground z-10">
-        © {new Date().getFullYear()} TesDev. All rights reserved.
+        © {new Date().getFullYear()} Mico Dev. All rights reserved.
       </footer>
     </div>
   );

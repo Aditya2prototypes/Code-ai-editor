@@ -11,13 +11,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Bot } from 'lucide-react';
-import { TesDevLogo } from '@/components/codemuse-logo';
+import { MicoDevLogo } from '@/components/codemuse-logo';
 
 export default function DocumentationPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
-        <TesDevLogo />
+        <MicoDevLogo />
         <Button asChild variant="outline">
           <Link href="/editor">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -28,7 +28,7 @@ export default function DocumentationPage() {
       <main className="container mx-auto max-w-4xl py-8 px-4 sm:px-6">
         <div className="space-y-4 text-center">
             <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
-                Welcome to TesDev
+                Welcome to Mico Dev
             </h1>
             <p className="text-xl text-muted-foreground">
                 Your AI-powered coding companion. Here's how to get started.

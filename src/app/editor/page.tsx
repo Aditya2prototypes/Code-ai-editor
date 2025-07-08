@@ -45,7 +45,7 @@ const defaultFile: File = {
   id: '1',
   name: 'script.js',
   language: 'javascript',
-  code: `// Welcome to TesDev!
+  code: `// Welcome to Mico Dev!
 // 1. Click the + to add a new file.
 // 2. Use the bot icon for AI assistance.
 // 3. Write code and click "Run" to execute.
@@ -107,7 +107,7 @@ const ActivityBar = ({
 // --- Editor Page ---
 
 export default function EditorPage() {
-  const [files, setFiles] = useLocalStorage<File[]>('tesdev-files-v3', [defaultFile]);
+  const [files, setFiles] = useLocalStorage<File[]>('micodev-files-v1', [defaultFile]);
   const [activeFileId, setActiveFileId] = useState<string>(defaultFile.id);
   const [output, setOutput] = useState('');
   const [explanation, setExplanation] = useState<string | null>(null);
@@ -116,15 +116,6 @@ export default function EditorPage() {
   const { toast } = useToast();
 
   const activeFile = files.find(f => f.id === activeFileId) || files[0] || null;
-
-  useEffect(() => {
-    // On initial load, if there's no active file ID set, but there are files,
-    // set the first file to be active.
-    if (files.length > 0 && !files.some(f => f.id === activeFileId)) {
-      setActiveFileId(files[0].id);
-    }
-  }, [files, activeFileId]);
-
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -154,6 +145,14 @@ export default function EditorPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Set the first file as active on initial load if no other is active
+  useEffect(() => {
+    if (files.length > 0 && !files.some(f => f.id === activeFileId)) {
+      setActiveFileId(files[0].id);
+    }
+  }, [files, activeFileId]);
+
 
   const handleRunCode = async () => {
     if (!activeFile) return;
@@ -219,21 +218,23 @@ export default function EditorPage() {
   }, [activeFileId, setFiles]);
   
   const handleAddFile = useCallback(() => {
-    const name = prompt('Enter a file name (e.g., app.js, style.css):', `untitled-${files.length + 1}.js`);
-    if (!name) return;
-  
-    const language = getLanguageFromFileName(name);
-  
-    const newFile: File = {
-      id: Date.now().toString(),
-      name,
-      language,
-      code: getInitialCode(name, language),
-    };
-  
-    setFiles(prevFiles => [...prevFiles, newFile]);
-    setActiveFileId(newFile.id);
-  }, [files.length, setFiles]);
+    setFiles(prevFiles => {
+      const name = prompt('Enter a file name (e.g., app.js, style.css):', `untitled-${prevFiles.length + 1}.js`);
+      if (!name) return prevFiles;
+    
+      const language = getLanguageFromFileName(name);
+    
+      const newFile: File = {
+        id: Date.now().toString(),
+        name,
+        language,
+        code: getInitialCode(name, language),
+      };
+      
+      setActiveFileId(newFile.id);
+      return [...prevFiles, newFile];
+    });
+  }, [setFiles]);
 
   const handleCloseFile = useCallback((fileIdToClose: string) => {
     setFiles(prevFiles => {
@@ -241,14 +242,12 @@ export default function EditorPage() {
       const newFiles = prevFiles.filter(f => f.id !== fileIdToClose);
 
       if (newFiles.length === 0) {
-        // Last file was closed, create a new default one
         const newDefaultFile = { ...defaultFile, id: Date.now().toString() };
         setActiveFileId(newDefaultFile.id);
         return [newDefaultFile];
       }
 
       if (activeFileId === fileIdToClose) {
-        // The active file was closed, select a new one
         const newActiveIndex = Math.max(0, fileToCloseIndex - 1);
         setActiveFileId(newFiles[newActiveIndex].id);
       }
