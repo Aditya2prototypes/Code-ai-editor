@@ -36,7 +36,7 @@ export default function HomePage() {
       </main>
 
       <footer className="absolute bottom-4 text-xs sm:text-sm text-muted-foreground z-10">
-        © {new Date().getFullYear()} TesDev. All rights reserved.
+        © {new Date().getFullYear()} Tesdev. All rights reserved.
       </footer>
     </div>
   );

@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'TesDev',
-  description: 'TesDev is an AI-powered code editor designed to help developers write, understand, and debug code faster than ever.',
+  title: 'Tesdev',
+  description: 'Tesdev is an AI-powered code editor designed to help developers write, understand, and debug code faster than ever.',
 };
 
 export default function RootLayout({
